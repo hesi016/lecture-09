@@ -1,42 +1,37 @@
 import React, { useEffect, useRef } from "react";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
-import { StadiaMaps } from "ol/source";
+import { OSM } from "ol/source";
 import { useGeographic } from "ol/proj";
 
 import "ol/ol.css";
 import { Draw } from "ol/interaction";
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
 
 useGeographic();
 
+const drawingVectorSource = new VectorSource();
 const map = new Map({
   view: new View({ center: [10.8, 59.9], zoom: 13 }),
   layers: [
-    new TileLayer({
-      source: new StadiaMaps({
-        layer: "outdoors",
-      }),
-    }),
+    new TileLayer({ source: new OSM() }),
+    new VectorLayer({ source: drawingVectorSource }),
   ],
 });
 
 interface DrawPointButtonProps {
   map: Map;
+  source: VectorSource;
 }
 
-function DrawPointButton({ map }: DrawPointButtonProps) {
+function DrawPointButton({ map, source }: DrawPointButtonProps) {
   function handleClick() {
-    map.addInteraction(
-      new Draw({
-        type: "Point",
-      }),
-    );
+    map.addInteraction(new Draw({ type: "Point", source }));
   }
-
   return <button onClick={handleClick}> Add point</button>;
 }
 
-// A functional React component
 export function Application() {
   const mapRef = useRef<HTMLDivElement | null>(null);
 
@@ -46,7 +41,7 @@ export function Application() {
 
   return (
     <>
-      <DrawPointButton map={map} />
+      <DrawPointButton map={map} source={drawingVectorSource} />
       <div ref={mapRef}></div>
     </>
   );
