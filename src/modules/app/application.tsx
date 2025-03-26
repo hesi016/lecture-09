@@ -8,6 +8,8 @@ import "ol/ol.css";
 import { Draw } from "ol/interaction";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
+import { Fill, Stroke, Style } from "ol/style";
+import { Circle } from "ol/style";
 
 useGeographic();
 
@@ -16,7 +18,24 @@ const map = new Map({
   view: new View({ center: [10.8, 59.9], zoom: 13 }),
   layers: [
     new TileLayer({ source: new OSM() }),
-    new VectorLayer({ source: drawingVectorSource }),
+    new VectorLayer({
+      source: drawingVectorSource,
+      style: [
+        new Style({
+          image: new Circle({
+            radius: 10,
+            stroke: new Stroke({ color: "black", width: 2 }),
+            fill: new Fill({ color: "red" }),
+          }),
+        }),
+        new Style({
+          image: new Circle({
+            radius: 12,
+            stroke: new Stroke({ color: "black", width: 2 }),
+          }),
+        }),
+      ],
+    }),
   ],
 });
 
