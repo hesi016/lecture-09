@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { Map, View } from "ol";
+import React, { useEffect, useRef, useState } from "react";
+import { Feature, Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 import { useGeographic } from "ol/proj";
@@ -20,27 +20,28 @@ if (featuresAsJson) {
   drawingVectorSource.addFeatures(new GeoJSON().readFeatures(featuresAsJson));
 }
 
+const drawingLayerStyle = [
+  new Style({
+    image: new Circle({
+      radius: 10,
+      stroke: new Stroke({ color: "white", width: 2 }),
+      fill: new Fill({ color: "red" }),
+    }),
+  }),
+  new Style({
+    image: new Circle({
+      radius: 12,
+      stroke: new Stroke({ color: "black", width: 2 }),
+    }),
+  }),
+];
 const map = new Map({
   view: new View({ center: [10.8, 59.9], zoom: 13 }),
   layers: [
     new TileLayer({ source: new OSM() }),
     new VectorLayer({
       source: drawingVectorSource,
-      style: [
-        new Style({
-          image: new Circle({
-            radius: 10,
-            stroke: new Stroke({ color: "black", width: 2 }),
-            fill: new Fill({ color: "red" }),
-          }),
-        }),
-        new Style({
-          image: new Circle({
-            radius: 12,
-            stroke: new Stroke({ color: "black", width: 2 }),
-          }),
-        }),
-      ],
+      style: drawingLayerStyle,
     }),
   ],
 });
@@ -50,14 +51,52 @@ interface DrawPointButtonProps {
   source: VectorSource;
 }
 
+interface PointFeautureFormProps {
+  feature: Feature;
+}
+
+function PointFeautureForm({ feature }: PointFeautureFormProps) {
+  const [featureName, setFeatureName] = useState("");
+  useEffect(() => {
+    feature.setProperties({ featureName });
+  }, [featureName]);
+  return (
+    <>
+      <h2>Update point properties (name: {featureName}) </h2>
+      <div>
+        Feature name:{" "}
+        <input
+          value={featureName}
+          onChange={(e) => setFeatureName(e.target.value)}
+        />
+      </div>
+    </>
+  );
+}
+
 function DrawPointButton({ map, source }: DrawPointButtonProps) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [currentFeature, setCurrentFeature] = useState<Feature>();
+
   function handleClick() {
     const draw = new Draw({ type: "Point", source });
     map.addInteraction(draw);
-
-    source.once("addfeature", () => map.removeInteraction(draw));
+    source.once("addfeature", (e) => {
+      map.removeInteraction(draw);
+      setCurrentFeature(e.feature);
+      dialogRef.current?.showModal();
+    });
   }
-  return <button onClick={handleClick}> Add point</button>;
+
+  return (
+    <button onClick={handleClick}>
+      Add point
+      <dialog ref={dialogRef}>
+        {currentFeature && <PointFeautureForm feature={currentFeature} />}
+        <button onClick={() => dialogRef.current?.close()}>Close</button>
+      </dialog>
+    </button>
+  );
 }
 
 export function Application() {
