@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
-import { OSM, StadiaMaps } from "ol/source";
+import { StadiaMaps } from "ol/source";
 import { useGeographic } from "ol/proj";
 
 import "ol/ol.css";
+import { Draw } from "ol/interaction";
 
 useGeographic();
 
@@ -19,6 +20,22 @@ const map = new Map({
   ],
 });
 
+interface DrawPointButtonProps {
+  map: Map;
+}
+
+function DrawPointButton({ map }: DrawPointButtonProps) {
+  function handleClick() {
+    map.addInteraction(
+      new Draw({
+        type: "Point",
+      }),
+    );
+  }
+
+  return <button onClick={handleClick}> Add point</button>;
+}
+
 // A functional React component
 export function Application() {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -27,5 +44,10 @@ export function Application() {
     map.setTarget(mapRef.current!);
   }, []);
 
-  return <div ref={mapRef}></div>;
+  return (
+    <>
+      <DrawPointButton map={map} />
+      <div ref={mapRef}></div>
+    </>
+  );
 }
