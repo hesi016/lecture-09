@@ -10,6 +10,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { Fill, Stroke, Style } from "ol/style";
 import { Circle } from "ol/style";
+import { GeoJSON } from "ol/format";
 
 useGeographic();
 
@@ -46,7 +47,10 @@ interface DrawPointButtonProps {
 
 function DrawPointButton({ map, source }: DrawPointButtonProps) {
   function handleClick() {
-    map.addInteraction(new Draw({ type: "Point", source }));
+    const draw = new Draw({ type: "Point", source });
+    map.addInteraction(draw);
+
+    source.once("addfeature", () => map.removeInteraction(draw));
   }
   return <button onClick={handleClick}> Add point</button>;
 }
@@ -56,6 +60,12 @@ export function Application() {
 
   useEffect(() => {
     map.setTarget(mapRef.current!);
+    drawingVectorSource.on("change", () => {
+      const featureAsJson = new GeoJSON().writeFeatures(
+        drawingVectorSource.getFeatures(),
+      );
+      localStorage.setItem("features", featureAsJson);
+    });
   }, []);
 
   return (
