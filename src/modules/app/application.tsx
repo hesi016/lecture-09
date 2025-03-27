@@ -26,7 +26,7 @@ const drawingLayerStyle = (feature: FeatureLike) => [
     image: new Circle({
       radius: 10,
       stroke: new Stroke({ color: "white", width: 2 }),
-      fill: new Fill({ color: "red" }),
+      fill: new Fill({ color: feature.getProperties().color || "blue" }),
     }),
     text: new Text({
       text: feature.getProperties().featureName,
@@ -65,9 +65,11 @@ interface PointFeautureFormProps {
 
 function PointFeautureForm({ feature }: PointFeautureFormProps) {
   const [featureName, setFeatureName] = useState("");
-  useEffect(() => {
-    feature.setProperties({ featureName });
-  }, [featureName]);
+  useEffect(() => feature.setProperties({ featureName }), [featureName]);
+
+  const [color, setColor] = useState("red");
+  useEffect(() => feature.setProperties({ color }), [color]);
+
   return (
     <>
       <h2>Update point properties (name: {featureName}) </h2>
@@ -76,6 +78,14 @@ function PointFeautureForm({ feature }: PointFeautureFormProps) {
         <input
           value={featureName}
           onChange={(e) => setFeatureName(e.target.value)}
+        />
+      </div>
+      <div>
+        Color:{" "}
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
         />
       </div>
     </>
